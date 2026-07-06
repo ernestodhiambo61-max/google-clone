@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantumSearch - Advanced Core Engine</title>
+    <style>
+        :root {
+            --goog-bg: #ffffff;
+            --goog-text: #202124;
+            --goog-muted: #70757a;
+            --goog-link: #1a0dab;
+            --goog-border: #dfe1e5;
+            --goog-shadow: 0 1px 6px rgba(32,33,36,0.28);
+            --goog-blue: #1a73e8;
+            --goog-accent-bg: #f8f9fa;
+        }
+
+        [data-theme="dark"] {
+            --goog-bg: #202124;
+            --goog-text: #e8eaed;
+            --goog-muted: #9aa0a6;
+            --goog-link: #8ab4f8;
+            --goog-border: #3c4043;
+            --goog-shadow: 0 1px 6px rgba(0,0,0,0.4);
+            --goog-accent-bg: #303134;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: Roboto, arial, sans-serif;
+            background-color: var(--goog-bg);
+            color: var(--goog-text);
+            font-size: 14px;
+        }
+
+        .hidden { display: none !important; }
+
+        
+        #home-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 80vh;
+        }
+
+        .engine-logo {
+            font-size: 5rem;
+            font-weight: 700;
+            letter-spacing: -2px;
+            margin-bottom: 30px;
+            user-select: none;
+        }
+        .logo-g1 { color: #4285F4; }
+        .logo-o1 { color: #EA4335; }
+        .logo-y  { color: #FBBC05; }
+        .logo-g2 { color: #4285F4; }
+        .logo-l  { color: #34A853; }
+        .logo-o2 { color: #EA4335; }
+
+        .search-container {
+            position: relative;
+            width: 100%;
+            max-width: 584px;
+            margin: 0 auto;
+        }
+
+        .search-box-wrapper {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--goog-border);
+            border-radius: 24px;
+            padding: 0 14px;
+            height: 46px;
+            background-color: var(--goog-bg);
+            transition: box-shadow 0.1s linear;
+        }
+
+        .search-box-wrapper:focus-within, .search-box-wrapper.has-suggestions {
+            box-shadow: var(--goog-shadow);
+            border-color: transparent;
+        }
+
+        .search-icon {
+            color: var(--goog-muted);
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            color: var(--goog-text);
+            background: transparent;
+        }
+
+        
+        .suggestions-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background-color: var(--goog-bg);
+            border-radius: 0 0 24px 24px;
+            box-shadow: var(--goog-shadow);
+            border-top: 1px solid var(--goog-border);
+            overflow: hidden;
+            z-index: 1000;
+            padding-bottom: 8px;
+        }
+
+        .suggestion-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            cursor: default;
+            font-weight: bold;
+        }
+
+        .suggestion-item:hover, .suggestion-item.selected {
+            background-color: var(--goog-accent-bg);
+        }
+
+        .btn-container {
+            margin-top: 28px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .goog-btn {
+            background-color: var(--goog-accent-bg);
+            border: 1px solid var(--goog-accent-bg);
+            color: var(--goog-text);
+            padding: 0 16px;
+            line-height: 27px;
+            height: 36px;
+            min-width: 54px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .goog-btn:hover {
+            border: 1px solid #dadce0;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+        }
+
+        
+        #results-header {
+            display: flex;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--goog-border);
+            gap: 20px;
+            position: sticky;
+            top: 0;
+            background: var(--goog-bg);
+            z-index: 900;
+        }
+
+        #results-header .engine-logo {
+            font-size: 1.8rem;
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+
+        .metrics-bar {
+            padding: 12px 164px;
+            color: var(--goog-muted);
+            font-size: 13px;
+        }
+
+        .main-results-layout {
+            padding: 0 164px 40px 164px;
+            max-width: 652px;
+        }
+
+        .result-node {
+            margin-bottom: 30px;
+        }
+
+        .result-meta-row {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            color: var(--goog-muted);
+            margin-bottom: 4px;
+        }
+
+        .result-anchor {
+            font-size: 20px;
+            color: var(--goog-link);
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .result-anchor:hover { text-decoration: underline; }
+
+        .result-snippet {
+            color: var(--goog-text);
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .match-highlight {
+            font-weight: bold;
+            color: inherit;
+        }
+
+        
+        .theme-control {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            cursor: pointer;
+            background: var(--goog-accent-bg);
+            border: 1px solid var(--goog-border);
+            padding: 6px 12px;
+            border-radius: 16px;
+        }
+
+        
+        .pagination-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 40px;
+            user-select: none;
+        }
+        .page-step {
+            cursor: pointer;
+            color: var(--goog-link);
+            padding: 5px 10px;
+        }
+        .page-step.active-page {
+            color: var(--goog-text);
+            font-weight: bold;
+            cursor: default;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="theme-control" id="theme-btn">Switch Theme</button>
+
+    
+    <main id="home-view">
+        <div class="engine-logo">
+            <span class="logo-g1">Q</span><span class="logo-o1">u</span><span class="logo-y">a</span><span class="logo-g2">n</span><span class="logo-l">t</span><span class="logo-o2">u</span>m
+        </div>
+        
+        <div class="search-container">
+            <div class="search-box-wrapper" id="home-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input core-query-input" autocomplete="off" autofocus>
+            </div>
+            <div class="suggestions-dropdown hidden" id="home-suggestions"></div>
+        </div>
+
+        <div class="btn-container">
+            <button class="goog-btn execution-trigger">Quantum Search</button>
+            <button class="goog-btn" id="lucky-btn">I'm Feeling Lucky</button>
+        </div>
+    </main>
+    
+    <!-- GOOGLE-STYLE RESULTS PANEL -->
+    <section id="results-view" class="hidden">
+        <header id="results-header">
+            <div class="engine-logo" id="brand-return">
+                <span class="logo-g1">Q</span><span class="logo-o1">u</span><span class="logo-y">a</span><span class="logo-g2">n</span><span class="logo-l">t</span><span class="logo-o2">u</span>m
+            </div>
+            <div class="search-container" style="margin: 0;">
+                <div class="search-box-wrapper" id="results-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input core-query-input" autocomplete="off">
+                </div>
+                <div class="suggestions-dropdown hidden" id="results-suggestions"></div>
+            </div>
+        </header>
+
+        <div class="metrics-bar" id="metrics-output"></div>
+        
+        <main class="main-results-layout">
+            <div id="hits-target-container"></div>
+            <div class="pagination-container" id="pagination-target"></div>
+        </main>
+    </section>
+
+    <script>
+        
+        const EnterpriseWebIndex = [
+            { id: 1, title: "Quantum Computing Hardware Architectures", url: "https://quantum-core.org", snippet: "An in-depth review of superconducting qubits and trapped-ion microprocessors engineered for algorithmic quantum supremacy." },
+            { id: 2, title: "JavaScript Micro-Optimization Engines", url: "https://v8-insights.dev", snippet: "Deep dive into V8 hidden classes, inline caching structures, and JIT compilation mechanics for hyper-performant execution execution profiles." },
+            { id: 3, title: "Advanced Neural Net Topology and Deep Learning", url: "https://deeplearning-matrix.edu", snippet: "Unlocking structural convergence models through tensor decomposition transformation pipelines across transformers and distributed recurrent networks." },
